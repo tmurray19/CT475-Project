@@ -1,15 +1,4 @@
 """
-
-
-
-HEEEEEEEEEEEEEEEEEEEEEEEEEEEEY
-DICKHEAAAAAAAAAAAAAAAAAAAAAAAAD
-https://machinelearningmastery.com/implement-decision-tree-algorithm-scratch-python/
-REMOVE THIS LINK
-YOU WASTE OF SPACE
-OTHERWISE YOU'LL DEFINITELY GET CAUGHT
-FOR PLAJURISM
-
 CT475 Assignment 3
 Python implementation of CART algorithm.
 
