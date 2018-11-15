@@ -73,10 +73,10 @@ def algorithmEvaluation(data, algorithm, nFolds, *args):
     return score
 
 
-# Calculate the Gini Index for splitting the data set
-def giniIndex(groups, classes):
+# Calculate the quality of the data splits
+def splitQuality(groups, classes):
     nInstances = sum([len(g) for g in groups])
-    gini = 0
+    splitQuality = 0
     for g in groups:
         size = len(g)
         if size == 0:
@@ -85,8 +85,8 @@ def giniIndex(groups, classes):
         for c in classes:
             p = [row[-1]for row in g].count(c)/size
             score += p*p
-        gini += (1-score)* (size/nInstances)
-    return gini
+        splitQuality += (1-score)* (size/nInstances)
+    return splitQuality
 
 # Splits a dataset based on an attributes
 def testingSplit(index, val, data):
@@ -98,16 +98,16 @@ def testingSplit(index, val, data):
             right.append(r)
     return left, right
 
-# Select the best split for the data, by calculating the gini index for the data sets
+# Select the best split for the data, by calculating the splitQuality of the data sets
 def getSplit(data):
     c = list(set(row[-1] for row in data))
     splitIndex, splitValue, splitScore, splitGroups = 9999, 9999, 9999, None
     for i in range(len(data[0])-1):
         for row in data:
             groups = testingSplit(i, row[i], data)
-            gini = giniIndex(groups, c)
-            if gini < splitScore:
-                splitIndex, splitValue, splitScore, splitGroups = i, row[i], gini, groups
+            sQ = splitQuality(groups, c)
+            if sQ < splitScore:
+                splitIndex, splitValue, splitScore, splitGroups = i, row[i], sQ, groups
     return {'index':splitIndex,'value':splitValue,'groups':splitGroups}
 
 def addToTerminal(group):
