@@ -18,11 +18,23 @@ Divide into 2/3 training, 1/3 testing
 Allow for n fold cross validation
 Allow users rudimentary input if at all possible
 Comment code for ease of reading, and to explain code decisions
+
+The main elements of CART algorithm:
+
+    Rules for splitting data at a node based on the value of one variable (Gini Impurity)
+
+    Stopping rules for deciding when a branch is terminal and can be split no more (Values defined by user)
+
+    A prediction for the target variable in each terminal node
+
 """
 
-# For reading CSV files & later code
+# For generating random seed (and other psuedorandom numbers)
 import random
+# For reading CSV files
 import csv
+# For printing run time at the end
+import time
 
 
 # For loading csv files
@@ -32,7 +44,8 @@ def csvLoader(f):
     data = list(l)
     return data
 
-# Randomly splits 'data' into 'nFolds' amount and creates lists of said splits
+
+# Randomly (psuedo-randomly) splits 'data' into 'nFolds' amount and creates lists of said splits
 def crossValidationSplit(data, nFolds):
     dataSplit = list()
     # dataCopy variable implemented to avoid messy code
@@ -75,7 +88,7 @@ def algorithmEvaluation(data, algorithm, nFolds, *args):
     return score
 
 
-# Calculate the quality of the data splits
+# Calculate the quality of the data splits - Implementation of Gini Impurity
 def splitQuality(groups, classes):
     nInstances = sum([len(g) for g in groups])
     splitQuality = 0
@@ -104,11 +117,14 @@ def testingSplit(index, val, data):
 # Select the best split for the data, by calculating the splitQuality of the data sets
 def getSplit(data):
     c = list(set(row[-1] for row in data))
-    splitIndex, splitValue, splitScore, splitGroups = 99999, 99999, 99999, None
+    splitIndex, splitValue, splitScore, splitGroups = 999, 999, 999, None
     for i in range(len(data[0])-1):
         for row in data:
+            # Calls the testingSplit function on the data
             groups = testingSplit(i, row[i], data)
+            # Tests the split data for quality
             sQ = splitQuality(groups, c)
+            # If the
             if sQ < splitScore:
                 splitIndex, splitValue, splitScore, splitGroups = i, row[i], sQ, groups
     return {'index':splitIndex,'value':splitValue,'groups':splitGroups}
@@ -133,7 +149,7 @@ def childNode(node, maxDepth, minSize, depth):
         node['left'], node['right'] = addToTerminal(left), addToTerminal(right)
         return
 
-    # Left child
+    # Left child node
     if len(left) <= minSize:
         # If the left node is smaller than the minimum size, its just added to the tree
         node['left'] = addToTerminal(left)
@@ -143,7 +159,7 @@ def childNode(node, maxDepth, minSize, depth):
         # And recursively calls the function on itself, increasing the depth by 1
         childNode(node['left'], maxDepth, minSize, depth+1)
 
-    # Right child
+    # Right child node
     if len(right) <= minSize:
         node['right'] = addToTerminal(right)
     else:
@@ -152,7 +168,9 @@ def childNode(node, maxDepth, minSize, depth):
 
 # Generated initial decision tree
 def makeDecisionTree(train, maxDepth, minSize):
+    # Starts the tree with the best split of the training data
     root = getSplit(train)
+    # Calls childNode function, which will recursively create binary tree from the root node
     childNode(root, maxDepth, minSize, 1)
     return root
 
@@ -187,25 +205,44 @@ def cart(train, test, maxDepth, minSize):
         predictions.append(p)
     return predictions
 
-# Set Random seed
-random.seed(7)
 
-# Allows for some user input, they can chose a different file to be tested, and change the amount of folds, the maximum depth, and the minimum size of the tree
+
+# Allows for some user input, they can chose a different file to be tested, the seed, and change the amount of folds, the maximum depth, and the minimum size of the tree
+
+
 
 # Load data
 file = (input("Please enter a file, or leave blank for owls.csv: ") or 'owls.csv')
 data = csvLoader(file)
 
-# Evaluate algorithm
+# Set Random seed
+seed = (input("Please enter your desired seed, or leave blank for 7: ") or 7)
+random.seed(seed)
+
+
+# Evaluate algorithm inputs from user
 nFolds = (input("Enter the number of folds you wish to create, or leave blank for default (3):") or 3)
 maxDepth = (input("Enter the maximum depth of the tree, or leave blank for default (5):") or 5)
-minSize = (input("Enter the number of folds you wish to create, or leave blank for default (10):") or 10)
+minSize = (input("Enter the minumum size of the tree, or leave blank for default (10):") or 10)
+
+nFolds = int(nFolds)
+maxDepth = int(maxDepth)
+minSize = int(minSize)
+
+# Record Start Time of prgram
+startTime = time.time()
+
+print('\n')
+# CART algorithm
 scores = algorithmEvaluation(data, cart, nFolds, maxDepth, minSize)
 
-# Formats results
-print('Scores: {}'.format(scores))
+# Formats results and shows the classification accuracy for each fold
+print('Accuracy scores for each fold: {}'.format(scores))
 # Mean accuracy of accuracy score for CART Algorithm
 print('Mean Accuracy: %.2f%%' % (sum(scores)/(len(scores))))
+
+print("--- This calculation took %.2f seconds ---" % (time.time() - startTime))
+
 
 # Users can then read the completed data before closing the program
 input()
